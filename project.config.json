@@ -1,5 +1,5 @@
 {
-  "compileType": "game",
+  "compileType": "miniprogram",
   "appid": "wx164eafeec3b9acb1",
   "projectname": "光伏产品经理助手",
   "libVersion": "3.16.1",
