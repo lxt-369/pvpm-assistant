@@ -138,38 +138,37 @@ function calcTotalHeight() {
   return h;
 }
 
-// ====== AI对话 ======
+// ====== AI对话（Coze 智能体） ======
 function callAI(userText) {
   APP.waiting = true;
   var roleId = APP.role ? APP.role.id : 'value-definer';
-  var roleName = APP.role ? APP.role.name : '综合';
 
   wx.cloud.callFunction({
-    name: 'ai-assistant',
+    name: 'coze-api',
     data: {
       action: 'chat',
-      role: roleId,
-      roleName: roleName,
       message: userText,
-      history: APP.msgs.slice(-8).map(function(m) {
-        return { role: m.isSelf ? 'user' : 'assistant', content: m.text.length > 500 ? m.text.substring(0,500) : m.text };
-      })
+      userId: APP.openid || 'mini_user',
     },
     success: function(res) {
       APP.waiting = false;
-      var reply = res.result && res.result.reply ? res.result.reply : fallbackReply(userText, roleId);
-      addMsg(reply, false, 'analysis');
+      var result = res.result;
+      if (result && result.code === 0 && result.data && result.data.reply) {
+        addMsg(result.data.reply, false, 'analysis');
+      } else {
+        addMsg('⚠️ AI回复失败，已切换到本地知识库。\n\n' + fallbackReply(userText, roleId), false, 'analysis');
+      }
     },
     fail: function() {
       APP.waiting = false;
-      addMsg('⚠️ 云函数调用失败，已切换到本地知识库回复。\n\n' + fallbackReply(userText, roleId), false, 'analysis');
+      addMsg('⚠️ 云函数调用失败，已切换到本地知识库。\n\n' + fallbackReply(userText, roleId), false, 'analysis');
     }
   });
 
   setTimeout(function() {
     if (APP.waiting) {
       APP.waiting = false;
-      addMsg('⚠️ AI响应超时，已切换到本地知识库回复。\n\n' + fallbackReply(userText, roleId), false, 'analysis');
+      addMsg('⚠️ AI响应超时，已切换到本地知识库。\n\n' + fallbackReply(userText, roleId), false, 'analysis');
     }
   }, 25000);
 }
